@@ -93,7 +93,9 @@ prac.df <- prac.df %>% group_by(Site, Plot, TrapEvent) %>%
     DOY = min(DOY)
   )
 
-test <- stan_gamm4(Count ~ s(DOY) ,# offset=(log(TrapHours)),
+TrapHours <- prac.df$TrapHours
+
+test <- stan_gamm4(Count ~ s(DOY) + offset(log(TrapHours)),
                    #random= ~(1|Plot) ,
                    data= prac.df , family = 'poisson',
                    chains=4, iter =1000)
@@ -103,6 +105,8 @@ DOY <- seq(range(prac.df$DOY)[1],range(prac.df$DOY)[2], by =1 )
 
 new.data <-  data.frame(DOY = DOY)
 
-dfit  <- posterior_epred(test, newdata= new.data)
+new.data$TrapHours <- 24
+
+dfit  <- posterior_epred(test, newdata= new.data, offset = log(24))
 
 matplot(t(dfit), type="l")
