@@ -98,7 +98,7 @@ TrapHours <- prac.df$TrapHours
 test <- stan_gamm4(Count ~ s(DOY) + offset(log(TrapHours)),
                    #random= ~(1|Plot) ,
                    data= prac.df , family = 'poisson',
-                   chains=4, iter =1000)
+                   chains=4, iter =2000)
 
 ## creating a new data frame
 DOY <- seq(range(prac.df$DOY)[1],range(prac.df$DOY)[2], by =1 )
@@ -109,4 +109,49 @@ new.data$TrapHours <- 24
 
 dfit  <- posterior_epred(test, newdata= new.data, offset = log(24))
 
-matplot(t(dfit), type="l")
+matplot(t(dfit/log(24)), type="l")
+
+
+pheno_extract <- function(fit, species, site, year, DOY){
+  
+  nIter <- nrow(fit) ## number of iterations in the fitted data frame
+  
+  # creating a data frame to store the key phenometrics
+  # 
+  pheno.df <- data.frame( SciName = as.factor( rep( species, nIter)),
+                          Site = as.factor( rep( site, nIter)),
+                          Year = as.factor( rep( year, nIter)),
+                          First = as.integer( rep( NA, nIter)),
+                          Last = as.integer( rep(NA, nIter)),
+                          Duration = as.integer( rep(NA, nIter)),
+                          Peak = as.integer( rep(NA, nIter)),
+                          Total = as.numeric( rep(NA, nIter))
+  )
+  
+  
+  ### looping over each predicted draw to determine key phenometrics
+  
+  for( i in 1:nIter){
+    focus <- fit[i,]
+    
+    pheno.df$Total[i] <- sum(focus)
+    
+    foc_cum_sum <- cumsum(focus)
+    
+    pro_sum <- foc_cum_sum/pheno.df$Total[i]
+    
+    pheno.df$First[i] <- DOY[min( which( pro_sum > 0.05))]
+    pheno.df$Last[i] <- DOY[max ( which( pro_sum < 0.95))]
+    pheno.df$Duration[i] <- pheno.df$Last[i]-pheno.df$First[i]
+    pheno.df$Peak[i] <-  DOY[which.max(focus)]
+    
+  }
+
+  return(pheno.df)
+}
+
+
+test.df <- pheno_extract(fit = dfit, species = "Aedes canadensis",
+                         site= "HARV", year="2018", DOY = DOY)
+
+ggplot(test.df, aes(x=Last)) + geom_density(adjust = 4)
