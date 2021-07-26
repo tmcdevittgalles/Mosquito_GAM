@@ -112,6 +112,16 @@ dfit  <- posterior_epred(test, newdata= new.data, offset = log(24))
 matplot(t(dfit/log(24)), type="l")
 
 
+pred.df <- as.data.frame(predictive_interval(dfit, prob = .9))
+
+pred.df$DOY <- new.data$DOY
+
+colnames(pred.df) <- c("Low","High", "DOY")
+
+ggplot(pred.df)+ geom_ribbon(aes(x=DOY, ymin=Low/24, ymax=High/24),alpha=.5,
+                             color= "grey")+ 
+  geom_point(data=prac.df,aes(x=DOY, y=Count/TrapHours))
+
 pheno_extract <- function(fit, species, site, year, DOY){
   
   nIter <- nrow(fit) ## number of iterations in the fitted data frame
@@ -154,4 +164,4 @@ pheno_extract <- function(fit, species, site, year, DOY){
 test.df <- pheno_extract(fit = dfit, species = "Aedes canadensis",
                          site= "HARV", year="2018", DOY = DOY)
 
-ggplot(test.df, aes(x=Last)) + geom_density(adjust = 4)
+ggplot(test.df, aes(x=Peak)) + geom_density(adjust = 4)
