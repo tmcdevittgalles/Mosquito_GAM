@@ -42,9 +42,9 @@ pheno_extract <- function(fit, species, site, year, DOY){
     
   }
   
-  metrics <- c("First", "Last", "Duration", "Peak", "Total")
+  metric_1 <- c("First", "Last", "Duration", "Peak", "Total")
   
-  pheno.df <- tidyr::gather( pheno.df, Pheno, Value, metrics)
+  pheno.df <- tidyr::gather( pheno.df, Pheno, Value, all_of(metric_1))
   
   pheno.df <- pheno.df %>% group_by( SciName, Site, Year, Pheno) %>% 
               summarize(
@@ -65,7 +65,7 @@ pheno_gam <- function( data, Species) {
 
     t <- 1
     
-    for( i in 1:length(unqiue(foc.df$Site))){
+    for( i in 1:length(unique(foc.df$Site))){
     
       site.df <- filter(foc.df, Site == unique(foc.df$Site)[i])
       
@@ -75,7 +75,7 @@ pheno_gam <- function( data, Species) {
         gam.df <- filter( site.df, Year == unique(site.df$Year)[i])
         
         
-        gam.df <- gam.df %>% group_by(SciName, Site, Plot, TrapEvent) %>% 
+        gam.df <- gam.df %>% group_by(SciName, Site, Plot, TrapEvent,Year) %>% 
           summarise(
             Count =  round(sum(Count_adj),  0),
             TrapHours = sum(TrapHours),
@@ -99,10 +99,10 @@ pheno_gam <- function( data, Species) {
         dfit  <- posterior_epred(bayGam, newdata= new.data, offset = log(24))
         
         
-        pheno.df <- pheno_extract(fit = dfit,
+        pheno.df <- pheno_extract( fit = dfit,
                                   species = unique(gam.df$SciName)[1],
                                   site = unique(gam.df$Site)[1],
-                                  year = unique(gam.df$Year)[1], 
+                                  year = unique(gam.df)[1], 
                                   DOY = DOY)
         
         if( t == 1){
