@@ -82,4 +82,14 @@ gam.df %>%  filter( SciName== "Aedes canadensis") %>%
 
 
 
-at1 <- pheno_gam( gam.df, Species = "Aedes canadensis")
+at2 <- pheno_gam( gam.df, Species = "Psorophora columbiae")
+
+at1 %>% ggplot(aes( x= Year, y = mPheno,color=Site ))+
+  geom_point() + facet_wrap(~Pheno, scales="free")
+
+
+taxa.df <-  rbind.data.frame(taxa.df ,at2)
+
+taxa.df <- unique(taxa.df)
+
+saveRDS( taxa.df ,"pheno.rds")
