@@ -156,9 +156,20 @@ pheno_extract <- function(fit, species, site, year, DOY){
     pheno.df$Peak[i] <-  DOY[which.max(focus)]
     
   }
-
+  
+  metric_1 <- c("First", "Last", "Duration", "Peak", "Total")
+  
+  pheno.df <- tidyr::gather( pheno.df, Pheno, Value, all_of(metric_1))
+  
+  pheno.df <- pheno.df %>% group_by( SciName, Site, Year, Pheno) %>% 
+    summarize(
+      mPheno = mean(Value),
+      sdPheno = sd(Value)
+    ) %>% ungroup()
+  
   return(pheno.df)
 }
+
 
 
 test.df <- pheno_extract(fit = dfit, species = "Aedes canadensis",

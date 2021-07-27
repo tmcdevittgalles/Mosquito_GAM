@@ -72,7 +72,7 @@ pheno_gam <- function( data, Species) {
     
       for( j in 1:length(unique(site.df$Year))){
       
-        gam.df <- filter( site.df, Year == unique(site.df$Year)[i])
+        gam.df <- filter( site.df, Year == unique(site.df$Year)[j])
         
         
         gam.df <- gam.df %>% group_by(SciName, Site, Plot, TrapEvent,Year) %>% 
@@ -80,7 +80,7 @@ pheno_gam <- function( data, Species) {
             Count =  round(sum(Count_adj),  0),
             TrapHours = sum(TrapHours),
             DOY = min(DOY)
-          )
+          ) %>% ungroup()
         
         TrapHours <- gam.df$TrapHours
         
@@ -100,12 +100,12 @@ pheno_gam <- function( data, Species) {
         
         
         pheno.df <- pheno_extract( fit = dfit,
-                                  species = unique(gam.df$SciName)[1],
-                                  site = unique(gam.df$Site)[1],
-                                  year = unique(gam.df)[1], 
+                                  species = as.factor(unique(gam.df$SciName)[1]),
+                                  site = as.factor(unique(gam.df$Site)[1]),
+                                  year = as.factor(unique(gam.df$Year)[1]), 
                                   DOY = DOY)
         
-        if( t == 1){
+        if( t == 1 ){
           
           out.df <- pheno.df
           
