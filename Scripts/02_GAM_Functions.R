@@ -39,6 +39,7 @@ pheno_extract <- function(fit, species, site, year, DOY){
     pheno.df$Last[i] <- DOY[max ( which( pro_sum < 0.95))]
     pheno.df$Duration[i] <- pheno.df$Last[i]-pheno.df$First[i]
     pheno.df$Peak[i] <-  DOY[which.max(focus)]
+    #pheno.df$AUC[i] <-  bayestestR::AUC(x = DOY, y =focus, method = "spline")
     
   }
   
