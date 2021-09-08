@@ -26,7 +26,7 @@ dim(complete.df) # 619,554 X 21
 # Summarize data to start to make decisions on what to explore first
 
 complete.df <- complete.df %>% group_by(SciName, Plot, Year) %>% 
-  mutate( Sp_Yr_Plot_Count =  sum(Count_adj))
+  mutate( Sp_Yr_Plot_Count =  sum(Count))
 
 hist(log10(complete.df$Sp_Yr_Plot_Count))
 
@@ -35,7 +35,7 @@ gam.df <- filter( complete.df, Sp_Yr_Plot_Count > 100)
 
 hist(log10(gam.df$Sp_Yr_Plot_Count))
 
-gam.df <- gam.df %>% filter( Count >0) %>% 
+gam.df <- gam.df %>%
   group_by(SciName, Plot, Year) %>% 
   mutate( nSamp =  length( unique(TrapEvent)) )
 
@@ -43,26 +43,43 @@ hist((gam.df$nSamp))
 
 #  Filtering out speices and years with less than 10 unique detections
 
-gam.df <- filter( gam.df , nSamp >= 10)
+gam.df <- filter( gam.df , nSamp >=10) ## use to be 10 but lets change it to 5 
 
-dim( gam.df ) # 18,895 X 23 # removed over 600,000 observations WHOA
+dim( gam.df ) # 44807 X 23 # removed over 600,000 observations WHOA
 
-### 
+  ### 
 
-length(unique(gam.df$SciName)) ## 34 unique species
+length(unique(gam.df$SciName)) ## 63 unique species
 
-ggplot(gam.df , aes(x = Domain, y= log10( Sp_Yr_Plot_Count) ) )+
-  geom_boxplot()+ facet_wrap(~SciName, scales="free_x")
+ggplot(gam.df , aes(x = SciName, y= log10( Sp_Yr_Plot_Count) ) )+
+  geom_boxplot()+ facet_wrap(~Domain, scales="free_x")
 
 ## only selecting sites with at least 2 species 
 
-gam.df <- filter(gam.df , Domain == "D01" |
-                   Domain == "D03" |
-                   Domain == "D05" |
-                   Domain == "D06" |
-                   Domain == "D08" |
-                   Domain == "D09" |
-                   Domain == "D11")
+# gam.df <- filter(gam.df , Domain == "D01" |
+#                    Domain == "D02" |
+#                    Domain == "D03" |
+#                    Domain == "D04" |
+#                    Domain == "D05" |
+#                    Domain == "D06" |
+#                    Domain == "D08" |
+#                    Domain == "D09" |
+#                    Domain == "D11"|
+#                    Domain == "D03" )
+
+
+gam.df <- filter(gam.df ,Domain == "D01" |
+                         Domain == "D02" |
+                         Domain == "D03" |
+                         Domain == "D04" |
+                         Domain == "D05" |
+                         Domain == "D06" |
+                         Domain == "D08" |
+                         Domain == "D09" |
+                         Domain == "D10"|
+                         Domain == "D11" )
+
+
 
 gam.df <- gam.df %>% 
   group_by(SciName, Site) %>% 
@@ -75,28 +92,43 @@ gam.df <- filter( gam.df , nYear > 2)
 ggplot(gam.df , aes(x = Domain, y= log10( Sp_Yr_Plot_Count), fill= Year ) )+
   geom_boxplot()+ facet_wrap(~SciName, scales="free_x")
 
+gam.df <- filter(gam.df, TotalWeight > 0)
 
-gam.df %>%  filter( SciName== "Aedes canadensis") %>% 
-  ggplot(aes(x = DOY, y= Count_adj/TrapHours , color= Year ) )+
-  geom_point(size=2) + facet_wrap(~Plot)
+gam.df %>%  filter( SciName== "Culex erraticus") %>% 
+  ggplot(aes(x = DOY, y= Count_adj/TrapHours , color= Domain ) )+
+  geom_point(size=2) + facet_wrap(~Year, scales="free_y")
+
+at1 <- pheno_gam( gam.df, Species = "Aedes vexans" )
 
 
-
-at2 <- pheno_gam( gam.df, Species = "Psorophora columbiae")
-
-at1 %>% ggplot(aes( x= Year, y = mPheno,color=Site ))+
+pheno.df <- at1[[1]]
+pheno.df %>% ggplot(aes( x=Year,y = mPheno, color=Site ))+
   geom_point() + facet_wrap(~Pheno, scales="free")
 
 
-taxa.df <-  rbind.data.frame(taxa.df ,at2)
+at1[[2]]
+
+
+gam_figure <- append(gam_figure, at1[[2]])
+
+taxa.df <- pheno.df
+
+taxa.df <-  rbind.data.frame(taxa.df ,pheno.df)
+
+taxa.df %>% ggplot(aes( x=Year,y = mPheno, color=Site ))+
+  geom_point() + facet_wrap(~Pheno, scales="free")
 
 taxa.df <- unique(taxa.df)
 
-#saveRDS( taxa.df ,"pheno.rds")
+saveRDS( taxa.df ,"pheno.rds")
+
+saveRDS( gam_figure ,"Gam_Figs.rds")
 
 
 
-taxa.df <- readRDS(  here("Data", "pheno.rds" ))
+
+
+#taxa.df <- readRDS(  here("Data", "pheno.rds" ))
 
 
 taxa.wide <- select(taxa.df, -"sdPheno")
