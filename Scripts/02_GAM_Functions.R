@@ -89,9 +89,7 @@ pheno_gam <- function( data, Species) {
         offset <- (gam.df$TrapHours/24) * gam.df$SubsetWeight/gam.df$TotalWeight
         if( nrow(gam.df) > 10){
           
-        bayGam <- stan_gamm4(Count ~ s(DOY, bs="tp" 
-                                       
-                                       ) + offset(log(offset)),
+        bayGam <- stan_gamm4(Count ~ s(DOY ) + offset(log(offset)),
                            #random= ~(1|Plot) ,
                            data= gam.df , family = 'poisson',
                            chains=4, iter =4000,

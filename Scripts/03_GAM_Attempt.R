@@ -94,14 +94,22 @@ ggplot(gam.df , aes(x = Domain, y= log10( Sp_Yr_Plot_Count), fill= Year ) )+
 
 gam.df <- filter(gam.df, TotalWeight > 0)
 
-gam.df %>%  filter( SciName== "Culex erraticus") %>% 
-  ggplot(aes(x = DOY, y= Count_adj/TrapHours , color= Domain ) )+
-  geom_point(size=2) + facet_wrap(~Year, scales="free_y")
-
-at1 <- pheno_gam( gam.df, Species = "Aedes vexans" )
+gam.df %>%  filter( SciName== "Aedes vexans") %>% 
+  ggplot(aes(x = DOY, y= Count_adj , color= as.factor(Year) ) )+
+  geom_point(size=2) + facet_wrap(~Site, scales="free_y")
 
 
-pheno.df <- at1[[1]]
+
+vex.df <- gam.df %>% filter(   Site == "KONZ" |
+                               Site == "TALL" |
+                               Site == "UNDE" | 
+                               Site == "WOOD" )
+
+at1 <- pheno_gam( vex.df, Species = "Aedes vexans")
+
+
+ pheno.df <- at1[[1]]
+
 pheno.df %>% ggplot(aes( x=Year,y = mPheno, color=Site ))+
   geom_point() + facet_wrap(~Pheno, scales="free")
 
@@ -111,12 +119,22 @@ at1[[2]]
 
 gam_figure <- append(gam_figure, at1[[2]])
 
-taxa.df <- pheno.df
+#taxa.df <- pheno.df
 
-taxa.df <-  rbind.data.frame(taxa.df ,pheno.df)
+taxa.df <-  rbind.data.frame(taxa.df  ,pheno.df)
+
+
+
 
 taxa.df %>% ggplot(aes( x=Year,y = mPheno, color=Site ))+
   geom_point() + facet_wrap(~Pheno, scales="free")
+
+taxa.df %>% ggplot(aes( x= mPheno, fill=Site ))+
+  geom_histogram() + facet_wrap(~Pheno, scales="free")
+
+
+## number of unique combinations 
+nrow(unique(taxa.df[,1:3])) ##177 
 
 taxa.df <- unique(taxa.df)
 
@@ -139,10 +157,10 @@ taxa.wide <- taxa.wide %>% tidyr::pivot_wider(
 
 
 taxa.wide %>%  ggplot(aes(x =First, y= Last, color=SciName))+
-  geom_point()+ stat_smooth(method="glm")
+  geom_point()+ stat_smooth(method="glm") + facet_wrap(~SciName, scales="free")
 
 
-pheno.pca <- FactoMineR::PCA(taxa.wide[,4:8])
+pheno.pca <- FactoMineR::PCA(taxa.wide[,4:7])
 
 taxa.wide$PCA1 <- pheno.pca$svd$U[,1]
 taxa.wide$PCA2 <- pheno.pca$svd$U[,2]
